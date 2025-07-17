@@ -4,7 +4,6 @@ import Screens.World;
 import Screens.endScreen;
 import Screens.loseScreen;
 import java.awt.*;
-import java.io.File;
 import java.io.FileNotFoundException;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -18,6 +17,8 @@ import javax.swing.*;
  * and world boundaries.
  */
 public class Controller {
+    // For measuring timer interval
+    private long lastLoopTime = System.currentTimeMillis();
     /** Controls whether the player can move beyond world boundaries */
     private boolean worldBorders;
     
@@ -33,8 +34,8 @@ public class Controller {
     /** Game window height */
     private int Height;
     
-    /** Background music file */
-    private File Music = new File("src/Assets/Music/Funny_Bit.wav");
+    /** Background music resource path */
+    private final String musicResourcePath = "/Assets/Music/Funny_Bit.wav";
     
     /** Audio clip for game music */
     private Clip clip;
@@ -56,6 +57,10 @@ public class Controller {
      * Handles physics calculations, collision detection, and screen updates.
      */
     Timer gameLoop = new Timer(16, e -> {
+        long loopStart = System.nanoTime();
+        long now = System.currentTimeMillis();
+        long interval = now - lastLoopTime;
+        lastLoopTime = now;
         player = world.getPlayer();
 
         double newLocX = player.getLocX();
@@ -155,11 +160,12 @@ public class Controller {
         // Refresh the game display
         world.repaint();
 
-        // Debug output every 97 ticks
+        long loopEnd = System.nanoTime();
+        long loopDuration = (loopEnd - loopStart) / 1000000; // ms
+        System.out.println("[PERF] Game loop duration: " + loopDuration + " ms");
+        System.out.println("[PERF] Timer interval: " + interval + " ms");
         tickCounter++;
-        if (tickCounter % 97 == 0) {
-            System.out.println("Player Position: " + player.getLocX() + " " + player.getLocY());
-        }
+        System.out.println("Player Position: " + player.getLocX() + " " + player.getLocY());
         
         // Handle lose condition
         if (ground == true) {
@@ -214,19 +220,26 @@ public class Controller {
 
     /**
      * Starts playing the game's background music in a continuous loop.
-     * Uses the audio file specified in the Music field.
+     * Uses classpath resources to ensure compatibility when running from a JAR file.
      * 
      * @throws RuntimeException If there's an error playing the music file
      */
     public void playMusic() {
         try {
-            AudioInputStream m = AudioSystem.getAudioInputStream(Music);
+            // Use getResourceAsStream to load from classpath (works in JAR files)
+            java.io.InputStream musicStream = getClass().getResourceAsStream(musicResourcePath);
+            if (musicStream == null) {
+                System.err.println("Warning: Could not find music file: " + musicResourcePath);
+                return; // Continue without music rather than crashing
+            }
+            AudioInputStream m = AudioSystem.getAudioInputStream(musicStream);
             clip = AudioSystem.getClip();
             clip.open(m);
             clip.start();
             clip.loop(Clip.LOOP_CONTINUOUSLY);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            System.err.println("Error playing music: " + e.getMessage());
+            // Don't throw runtime exception for music - game should continue without music
         }
     }
 }
