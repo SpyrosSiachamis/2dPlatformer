@@ -57,7 +57,3 @@ The engine is built with a clear separation of concerns:
 1. Clone the repository
 2. Open in your favorite Java IDE
 3. Run the Main class to start the game
-
-## Screenshots
-
-*(Coming soon)*
