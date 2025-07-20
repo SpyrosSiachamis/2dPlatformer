@@ -30,7 +30,8 @@ public class World extends JFrame {
     
     /** List of all players in the world (for potential multiplayer) */
     private List<Player> players;
-    
+
+    private Camera camera = new Camera();
     /** Main panel containing all game elements */
     JPanel worldPane = new JPanel(null);
     
@@ -49,7 +50,7 @@ public class World extends JFrame {
      */
     public World(int width, int height, String title, Player player){
         this.player = player;
-        
+
         // Initialize platforms for the level layout
         addPlatform(new Platform(20,300,90,10));
         addPlatform(new Platform(140,240,90,10));
@@ -327,5 +328,50 @@ public class World extends JFrame {
         platforms.add(platform);
         worldPane.add(platform.getPlatPanel());
         worldPane.repaint();
+    }
+
+    public class Camera{
+        private int x;
+        private int y;
+
+        public void update()
+        {
+            x = Math.max(0,player.getLocX() - getWidth() / 2);
+        }
+
+        public int getX() {
+            return x;
+        }
+
+        public void setX(int x) {
+            this.x = x;
+        }
+
+        public int getY() {
+            return y;
+        }
+
+        public void setY(int y) {
+            this.y = y;
+        }
+
+        public Camera() {
+        }
+    }
+
+    public void applyCameraOffset() {
+        int offsetX = camera.getX();
+        player.getEntityPane().setLocation(player.getLocX() - offsetX, (int) player.getLocY());
+        for (Platform p : platforms) {
+            p.getPlatPanel().setLocation(p.getBounds().x - offsetX, p.getBounds().y);
+        }
+    }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public void setCamera(Camera camera) {
+        this.camera = camera;
     }
 }

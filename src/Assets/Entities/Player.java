@@ -100,7 +100,7 @@ public class Player extends Entity {
 
     /**
      * Gets the player's current vertical position.
-     * 
+     *
      * @return The Y coordinate
      */
     public double getLocY() {

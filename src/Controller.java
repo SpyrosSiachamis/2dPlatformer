@@ -3,13 +3,13 @@ import Assets.Entities.Player;
 import Screens.World;
 import Screens.endScreen;
 import Screens.loseScreen;
+
 import java.awt.*;
 import java.io.FileNotFoundException;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.*;
-
 /**
  * The Controller class serves as the main game engine, managing game logic, physics,
  * collision detection, and animation for the 2D platformer game.
@@ -51,7 +51,7 @@ public class Controller {
     
     /** Counter to prevent multiple end screens */
     int i = 0;
-    
+
     /**
      * The main game loop timer that runs at approximately 60 FPS (16ms intervals).
      * Handles physics calculations, collision detection, and screen updates.
@@ -158,6 +158,8 @@ public class Controller {
         player.getEntityPane().setLocation((int)newLocX, (int)newLocY);
 
         // Refresh the game display
+        world.getCamera().update();
+        world.applyCameraOffset();
         world.repaint();
 
         long loopEnd = System.nanoTime();
