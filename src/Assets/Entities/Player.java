@@ -50,6 +50,9 @@ public class Player extends Entity {
     /** Flag indicating if player is touching the ground or platform */
     private boolean playerIsOnGround = false;
 
+    boolean landedOnPlatformOnce;
+
+    private int points = 0;
     /**
      * Constructs a new Player entity with specified position and movement parameters.
      * Initializes the player's visual representation as a red square.
@@ -292,13 +295,30 @@ public class Player extends Entity {
     }
 
     /**
-     * Checks if the player is currently on the ground or platform.
-     * Used by the Controller to determine if the player can jump.
-     * 
-     * @return true if on ground, false if in air
+     * Checks if the player is standing on any platform with vertical tolerance.
+     * Helps make jumping more responsive even if the player is slightly above the platform.
+     *
+     * @param platforms List of all platforms in the world
+     * @return true if player is on (or nearly on) a platform
      */
-    public boolean isOnGround() {
-        return playerIsOnGround;
+    public boolean isOnGround(java.util.List<Platform> platforms) {
+        Rectangle playerBounds = new Rectangle((int) locX, (int) locY, 20, 20);
+
+        // Create a small rectangle just below the player's feet
+        Rectangle feet = new Rectangle(playerBounds.x, playerBounds.y + playerBounds.height, playerBounds.width, 5);  // tolerance (5 pixels below));
+
+        for (Platform p : platforms) {
+            if (p.getBounds().intersects(feet)) {
+                if (!landedOnPlatformOnce)
+                {
+                    setPoints(getPoints() + 10);
+                    landedOnPlatformOnce = true;
+                }
+                return true;
+            }
+        }
+        landedOnPlatformOnce = false;
+        return false;
     }
 
     /**
@@ -309,5 +329,13 @@ public class Player extends Entity {
      */
     public void setOnGround(boolean onGround) {
         this.playerIsOnGround = onGround;
+    }
+
+    public int getPoints() {
+        return points;
+    }
+
+    public void setPoints(int points) {
+        this.points = points;
     }
 }

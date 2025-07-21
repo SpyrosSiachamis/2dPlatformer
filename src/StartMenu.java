@@ -48,7 +48,7 @@ public class StartMenu extends JFrame {
             Controller game = null;
             try {
                 // Initialize game controller with window dimensions, world name, and player
-                game = new Controller(720, 480, "World", true, true, player);
+                game = new Controller(100000, 480, "World", true, true, player);
             } catch (FileNotFoundException ex) {
                 throw new RuntimeException(ex);
             }

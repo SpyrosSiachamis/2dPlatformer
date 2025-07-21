@@ -108,8 +108,7 @@ public class Controller {
                 if (playerOldBottom <= platformTop && vy > 0) {
                     newLocY = platformTop - 20;  // Place player on top of platform
                     vy = 0;
-                    landed = true;
-                    
+
                     // Check for end platform (win condition)
                     if (plat.isEndPlat()) {
                         world.dispose();
@@ -132,11 +131,10 @@ public class Controller {
         }
 
         // Ground collision (world bottom - lose condition)
-        int groundLevel = world.getHeight()-65;
+        int groundLevel = world.getWorldHeight()-65;
         if (newLocY >= groundLevel) {
             newLocY = groundLevel;
             vy = 0;
-            landed = true;
             ground = true;
         }
 
@@ -144,12 +142,12 @@ public class Controller {
         if (newLocX < 0) {
             newLocX = 0;
         }
-        if (newLocX > world.getWidth() - 45) {
+        if (newLocX > world.getWorldWidth() - 45) {
             newLocX = world.getWidth() - 45;
         }
 
         // Update player onGround status
-        player.setOnGround(landed);
+        player.setOnGround(player.isOnGround(world.getPlatforms()));
 
         // Update player position and velocity
         player.setLocX(newLocX);
@@ -158,16 +156,18 @@ public class Controller {
         player.getEntityPane().setLocation((int)newLocX, (int)newLocY);
 
         // Refresh the game display
+        world.updatePlatforms();
         world.getCamera().update();
         world.applyCameraOffset();
+        world.getPoints().setText("Points: " + player.getPoints());
         world.repaint();
 
-        long loopEnd = System.nanoTime();
-        long loopDuration = (loopEnd - loopStart) / 1000000; // ms
-        System.out.println("[PERF] Game loop duration: " + loopDuration + " ms");
-        System.out.println("[PERF] Timer interval: " + interval + " ms");
-        tickCounter++;
-        System.out.println("Player Position: " + player.getLocX() + " " + player.getLocY());
+//        long loopEnd = System.nanoTime();
+//        long loopDuration = (loopEnd - loopStart) / 1000000; // ms
+//        System.out.println("[PERF] Game loop duration: " + loopDuration + " ms");
+//        System.out.println("[PERF] Timer interval: " + interval + " ms");
+//        tickCounter++;
+//        System.out.println("Player Position: " + player.getLocX() + " " + player.getLocY());
         
         // Handle lose condition
         if (ground == true) {
@@ -193,18 +193,18 @@ public class Controller {
      * @throws FileNotFoundException If required game files cannot be found
      */
     public Controller(int width, int height, String title, boolean enableGravity, boolean worldBorders, Player player) throws FileNotFoundException {
-        this.Width = width;
-        this.Height = height;
+        this.Width = 720;
+        this.Height = 480;
         this.Title = title;
         this.worldBorders = worldBorders;
         this.player = player;
         this.world = new World(Width, Height, Title, player);
+        if (worldBorders){
+            this.world.setWorldWidth(width);
+            this.world.setWorldHeight(height);
+        }
         world.repaint();
         world.setGravityEnabled(enableGravity);
-
-        // Create a ground platform at the bottom of the world
-        Platform ground = new Platform(0, world.getHeight() - 40, world.getWidth(), 40);
-        world.addPlatform(ground);
 
         // Start the game loop
         gameLoop.start();

@@ -7,7 +7,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import javax.swing.*;
+
 
 /**
  * The World class represents the game world where gameplay takes place.
@@ -34,7 +36,11 @@ public class World extends JFrame {
     private Camera camera = new Camera();
     /** Main panel containing all game elements */
     JPanel worldPane = new JPanel(null);
-    
+
+    JPanel pointsPane = new JPanel(null);
+    JLabel points = new JLabel("Points: ");
+    private Random rand = new Random();
+    private int worldWidth, worldHeight;
     /** The primary player character */
     Player player;
 
@@ -56,8 +62,8 @@ public class World extends JFrame {
         addPlatform(new Platform(140,240,90,10));
         addPlatform(new Platform(260,300,90,10));
         addPlatform(new Platform(400,300,90,10));
-        addEndPlatform(new endPlatform(560,300,50,10));
-        
+        addPlatform(new Platform(560,240,90,10));
+
         // Configure window properties
         setTitle(title);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -66,7 +72,14 @@ public class World extends JFrame {
         setBackground(Color.BLACK);
         worldPane.setBackground(Color.BLACK);
         add(worldPane);
-        
+        points.setForeground(Color.WHITE);
+        points.setBounds(10,10,100,20);
+        pointsPane.setOpaque(false);
+        pointsPane.setBounds(0,0,200,40);
+        pointsPane.add(points);
+        worldPane.add(pointsPane);
+
+
         // Add player to the world and configure input
         worldPane.add(this.player.getEntityPane());
         setupKeyBindings();
@@ -182,7 +195,6 @@ public class World extends JFrame {
         actionMap.put("pressLeft", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingLeft(true);
-                System.out.println("Pressed A");
             }
         });
 
@@ -191,7 +203,6 @@ public class World extends JFrame {
         actionMap.put("releaseLeft", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingLeft(false);
-                System.out.println("Released A");
             }
         });
 
@@ -200,7 +211,6 @@ public class World extends JFrame {
         actionMap.put("pressRight", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingRight(true);
-                System.out.println("Pressed D");
             }
         });
 
@@ -209,7 +219,6 @@ public class World extends JFrame {
         actionMap.put("releaseRight", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingRight(false);
-                System.out.println("Released D");
             }
         });
 
@@ -217,7 +226,7 @@ public class World extends JFrame {
         inputMap.put(KeyStroke.getKeyStroke("pressed W"), "pressUp");
         actionMap.put("pressUp", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
-                if (player.isOnGround()) {
+                if (player.isOnGround(getPlatforms())) {
                     player.setyVelocity(-player.getJumpStrength()); // jump impulse upwards (negative velocity)
                     player.setOnGround(false);
                 }
@@ -230,7 +239,6 @@ public class World extends JFrame {
         actionMap.put("releaseUp", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingUp(false);
-                System.out.println("Released W");
             }
         });
 
@@ -239,7 +247,6 @@ public class World extends JFrame {
         actionMap.put("pressDown", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingDown(true);
-                System.out.println("Pressed S");
             }
         });
 
@@ -248,7 +255,6 @@ public class World extends JFrame {
         actionMap.put("releaseDown", new AbstractAction() {
             public void actionPerformed(ActionEvent e) {
                 player.setMovingDown(false);
-                System.out.println("Released S");
             }
         });
     }
@@ -336,7 +342,7 @@ public class World extends JFrame {
 
         public void update()
         {
-            x = Math.max(0,player.getLocX() - getWidth() / 2);
+            x = Math.max(0,player.getLocX() - getWidth() / 15);
         }
 
         public int getX() {
@@ -373,5 +379,81 @@ public class World extends JFrame {
 
     public void setCamera(Camera camera) {
         this.camera = camera;
+    }
+
+    public void updatePlatforms() {
+        int offsetX = camera.getX();
+
+        for (Platform p : platforms) {
+            if (p.isActive()) {  // assuming you added isActive()
+                // Move platform visually relative to camera
+                // The platform's bounds.x is its world position
+                // So we check if it's off screen relative to camera offset
+                if (p.getBounds().getLocation().x + p.getBounds().width - offsetX < 0) {
+                    p.setActive(false);
+                }
+            }
+        }
+
+        // Recycle inactive platforms
+        for (Platform p : platforms) {
+            if (!p.isActive()) {
+                Platform last = findLastActivePlatform();
+                if (last != null) {
+                    int gap = 50 + rand.nextInt(100);
+                    int newX = last.getBounds().x + last.getBounds().width + gap;
+
+                    int heightOffset = rand.nextInt(51) - 25; // ±25 px vertical offset
+                    int newY = clamp(last.getBounds().y + heightOffset, 100, worldPane.getHeight() - 100);
+
+                    // Update platform bounds and visual location
+                    Rectangle bounds = p.getBounds();
+                    bounds.setLocation(newX, newY);
+                    p.setBounds(bounds);
+                    p.getPlatPanel().setLocation(newX - offsetX, newY);
+
+                    p.setActive(true);
+                }
+            }
+        }
+    }
+
+    private Platform findLastActivePlatform() {
+        Platform last = null;
+        for (Platform p : platforms) {
+            if (p.isActive()) {
+                if (last == null || p.getBounds().x > last.getBounds().x) {
+                    last = p;
+                }
+            }
+        }
+        return last;
+    }
+    private int clamp(int x, int min, int max) {
+        return Math.max(min, Math.min(max, x));
+    }
+
+    public int getWorldHeight() {
+        return worldHeight;
+    }
+
+    public void setWorldHeight(int worldHeight) {
+        this.worldHeight = worldHeight;
+    }
+
+    public int getWorldWidth() {
+        return worldWidth;
+    }
+
+    public void setWorldWidth(int worldWidth) {
+        this.worldWidth = worldWidth;
+    }
+
+    public JLabel getPoints() {
+        return points;
+    }
+
+    public void setPoints(JLabel points) {
+        this.points = points;
     }
 }

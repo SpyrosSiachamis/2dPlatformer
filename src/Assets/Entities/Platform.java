@@ -29,7 +29,10 @@ public class Platform
     
     /** Flag indicating if this is an end platform (level goal) */
     boolean isEndPlat = false;
-    
+
+    private boolean isActive = true;
+
+    private boolean isGroundPlat;
     /**
      * Constructs a new platform with the specified position and dimensions.
      * Initializes the platform's collision bounds and visual representation.
@@ -44,6 +47,7 @@ public class Platform
         platIm = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         this.platIm = platIm;
         this.platPanel = platPanel;
+        this.isGroundPlat = isGroundPlat;
     }
 
     /**
@@ -137,4 +141,14 @@ public class Platform
     public void setEndPlat(boolean endPlat) {
         isEndPlat = endPlat;
     }
+
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean b) {
+        isActive = b;
+    }
+
 }
